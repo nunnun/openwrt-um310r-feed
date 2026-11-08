@@ -1,0 +1,21 @@
+{
+	"luci-app-um310r": {
+		"description": "uM310R LTE status and SMS",
+		"read": {
+			"ubus": {
+				"um310r": [
+					"status",
+					"sms_list"
+				]
+			}
+		},
+		"write": {
+			"ubus": {
+				"um310r": [
+					"sms_delete",
+					"sms_send"
+				]
+			}
+		}
+	}
+}

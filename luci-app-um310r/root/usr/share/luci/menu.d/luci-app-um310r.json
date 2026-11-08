@@ -1,0 +1,13 @@
+{
+	"admin/network/um310r-lte": {
+		"title": "LTE",
+		"order": 25,
+		"action": {
+			"type": "view",
+			"path": "um310r/lte"
+		},
+		"depends": {
+			"acl": [ "luci-app-um310r" ]
+		}
+	}
+}

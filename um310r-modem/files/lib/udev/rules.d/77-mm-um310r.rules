@@ -1,0 +1,7 @@
+# AM Telecom AMM570 (NEC uM310R): ModemManager drives the card over MBIM only.
+# Its serial ports (DIAG, AT, NMEA in MBIM mode 0209; also ttyACM in ACM mode
+# 0202) belong to um310r-modem (band lock, signal details, ACM -> MBIM switch).
+ACTION!="add|change|move|bind", GOTO="mm_um310r_end"
+SUBSYSTEM!="tty", GOTO="mm_um310r_end"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1ecb", ENV{ID_MM_PORT_IGNORE}="1"
+LABEL="mm_um310r_end"

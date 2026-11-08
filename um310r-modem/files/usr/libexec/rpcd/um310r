@@ -1,0 +1,94 @@
+#!/bin/sh
+# rpcd plugin: ubus object "um310r" for the NEC uM310R LTE card (AMM570).
+#
+#   ubus call um310r status                     last signal status (strings)
+#   ubus call um310r sms_list                   SIM usage + messages (UTF-8)
+#   ubus call um310r sms_delete '{"index":"3"}' or '{"index":"all"}' (string)
+#   ubus call um310r sms_send '{"number":"09012345678","text":"..."}'
+#
+# status: the um310r-modem daemon's status file. SMS: ModemManager (mmcli);
+# delete and send go through /usr/sbin/um310r-modem, which checks the input.
+# Errors: {"error": "<message>"}.
+
+. /usr/share/libubox/jshn.sh
+
+MODEM=/usr/sbin/um310r-modem
+RUN=/var/run/um310r-modem
+
+reply_error() { json_init; json_add_string error "$1"; json_dump; exit 0; }
+
+# run the CLI; its output is the error text when it fails
+run_modem() {
+	local out
+	out=$("$MODEM" "$@" 2>&1) || reply_error "${out:-failed}"
+	json_init; json_add_string result ok; json_dump
+}
+
+do_status() {
+	local k v
+	json_init
+	[ -r $RUN/status ] && while IFS='=' read -r k v; do
+		case "$k" in ''|*[!a-z0-9_]*) continue ;; esac
+		json_add_string "$k" "$v"
+	done < $RUN/status
+	json_dump
+}
+
+# SMS from ModemManager (mmcli -K key/value output); SIM usage from the
+# daemon's status file (sms_used / sms_total, read with AT+CPMS?)
+do_sms_list() {
+	local m id k v num text time state
+	json_init
+	json_add_array messages
+	m=$(mmcli -L 2>/dev/null | sed -n 's|.*/Modem/\([0-9]*\) .*|\1|p' | head -1)
+	[ -n "$m" ] && for id in $(mmcli -m "$m" --messaging-list-sms 2>/dev/null | sed -n 's|.*/SMS/\([0-9]*\).*|\1|p'); do
+		num=""; text=""; time=""; state=""
+		while IFS= read -r l; do
+			k=${l%% :*}; k=$(echo "$k" | tr -d ' '); v=${l#*: }
+			[ "$v" = "--" ] && v=""
+			# mmcli -K prints non-ASCII bytes as \ooo octal escapes
+			case "$v" in *\\[0-7][0-7][0-7]*) v=$(printf '%b' "$(echo "$v" | sed 's/\\\([0-7][0-7][0-7]\)/\\0\1/g')") ;; esac
+			case "$k" in
+				sms.content.number) num=$v ;;
+				sms.content.text) text=$v ;;
+				sms.properties.timestamp) time=$v ;;
+				sms.properties.state) state=$v ;;
+			esac
+		done <<EOF
+$(mmcli -s "$id" -K 2>/dev/null)
+EOF
+		json_add_object ""
+		json_add_int index "$id"
+		json_add_string status "$state"
+		json_add_string from "$num"
+		json_add_string time "$time"
+		json_add_string text "$text"
+		json_close_object
+	done
+	json_close_array
+	k=$(sed -n 's/^sms_used=//p' $RUN/status 2>/dev/null); [ -n "$k" ] && json_add_int used "$k"
+	k=$(sed -n 's/^sms_total=//p' $RUN/status 2>/dev/null); [ -n "$k" ] && json_add_int total "$k"
+	json_dump
+}
+
+case "$1" in
+list)
+	echo '{ "status": {}, "sms_list": {}, "sms_delete": { "index": "all" }, "sms_send": { "number": "str", "text": "str" } }'
+	;;
+call)
+	input=$(cat)
+	case "$2" in
+	status) do_status ;;
+	sms_list) do_sms_list ;;
+	sms_delete)
+		idx=$(echo "$input" | jsonfilter -e '@.index' 2>/dev/null)
+		run_modem sms-del "$idx" ;;
+	sms_send)
+		num=$(echo "$input" | jsonfilter -e '@.number' 2>/dev/null)
+		text=$(echo "$input" | jsonfilter -e '@.text' 2>/dev/null)
+		[ -n "$num" ] && [ -n "$text" ] || reply_error "number and text are required"
+		run_modem sms-send "$num" "$text" ;;
+	*) reply_error "unknown method" ;;
+	esac
+	;;
+esac

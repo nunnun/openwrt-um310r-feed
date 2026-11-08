@@ -1,0 +1,12 @@
+#!/bin/sh /etc/rc.common
+# AMM570 helper next to ModemManager: LTE details, IMEI, SIM SMS usage,
+# connection and card recovery (see /usr/sbin/um310r-modem)
+START=98
+USE_PROCD=1
+
+start_service() {
+	procd_open_instance
+	procd_set_param command /usr/sbin/um310r-modem daemon
+	procd_set_param respawn
+	procd_close_instance
+}

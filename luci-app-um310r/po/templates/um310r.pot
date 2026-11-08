@@ -1,0 +1,135 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+msgid "AM Telecom AMM570 LTE module. The connection itself is managed by ModemManager (Network > Interfaces > WWAN). Signal values are refreshed every 10 seconds; messages every minute."
+msgstr ""
+
+msgid "Band"
+msgstr ""
+
+msgid "Delete all messages stored on the modem?"
+msgstr ""
+
+msgid "Delete all messages"
+msgstr ""
+
+msgid "Delete all"
+msgstr ""
+
+msgid "Deleting the message failed: %s"
+msgstr ""
+
+msgid "Deleting the messages failed: %s"
+msgstr ""
+
+msgid "Denied"
+msgstr ""
+
+msgid "Enter a phone number (digits, optional leading +)."
+msgstr ""
+
+msgid "Excellent"
+msgstr ""
+
+msgid "Fair"
+msgstr ""
+
+msgid "Sender"
+msgstr ""
+
+msgid "Good"
+msgstr ""
+
+msgid "IMEI"
+msgstr ""
+
+msgid "LTE"
+msgstr ""
+
+msgid "Message"
+msgstr ""
+
+msgid "Modem firmware"
+msgstr ""
+
+msgid "No messages on the modem."
+msgstr ""
+
+msgid "No service / very weak"
+msgstr ""
+
+msgid "Not registered"
+msgstr ""
+
+msgid "Operator"
+msgstr ""
+
+msgid "PCI / TAC / Cell ID"
+msgstr ""
+
+msgid "RSRP"
+msgstr ""
+
+msgid "RSRQ"
+msgstr ""
+
+msgid "RSSI"
+msgstr ""
+
+msgid "Received"
+msgstr ""
+
+msgid "Registered (home)"
+msgstr ""
+
+msgid "Registered (roaming)"
+msgstr ""
+
+msgid "Registration"
+msgstr ""
+
+msgid "SIM message storage: %d of %d used."
+msgstr ""
+
+msgid "SMS sent to %s."
+msgstr ""
+
+msgid "SMS"
+msgstr ""
+
+msgid "Searching"
+msgstr ""
+
+msgid "Send SMS"
+msgstr ""
+
+msgid "Send this SMS to %s? Sending an SMS may be charged by the carrier."
+msgstr ""
+
+msgid "Send"
+msgstr ""
+
+msgid "Sending the SMS failed: %s"
+msgstr ""
+
+msgid "Signal level"
+msgstr ""
+
+msgid "Signal"
+msgstr ""
+
+msgid "The SIM message storage is (almost) full. New messages cannot be received until some are deleted."
+msgstr ""
+
+msgid "The message must be 1 to 70 characters."
+msgstr ""
+
+msgid "Recipient"
+msgstr ""
+
+msgid "Very weak"
+msgstr ""
+
+msgid "Weak"
+msgstr ""
+

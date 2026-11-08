@@ -1,0 +1,136 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ja\n"
+
+msgid "AM Telecom AMM570 LTE module. The connection itself is managed by ModemManager (Network > Interfaces > WWAN). Signal values are refreshed every 10 seconds; messages every minute."
+msgstr "AM Telecom AMM570 LTE モジュールです。接続そのものは ModemManager が管理します（ネットワーク > インターフェース > WWAN）。電波の状態は 10 秒ごと、SMS は 1 分ごとに更新されます。"
+
+msgid "Band"
+msgstr "バンド"
+
+msgid "Delete all messages stored on the modem?"
+msgstr "モデムに保存されている SMS をすべて削除しますか？"
+
+msgid "Delete all messages"
+msgstr "SMS をすべて削除"
+
+msgid "Delete all"
+msgstr "すべて削除"
+
+msgid "Deleting the message failed: %s"
+msgstr "SMS を削除できませんでした: %s"
+
+msgid "Deleting the messages failed: %s"
+msgstr "SMS を削除できませんでした: %s"
+
+msgid "Denied"
+msgstr "登録拒否"
+
+msgid "Enter a phone number (digits, optional leading +)."
+msgstr "電話番号を数字で入力してください（先頭に + を付けても構いません）。"
+
+msgid "Excellent"
+msgstr "非常に良い"
+
+msgid "Fair"
+msgstr "普通"
+
+msgid "Sender"
+msgstr "送信元"
+
+msgid "Good"
+msgstr "良い"
+
+msgid "IMEI"
+msgstr "IMEI"
+
+msgid "LTE"
+msgstr "LTE"
+
+msgid "Message"
+msgstr "本文"
+
+msgid "Modem firmware"
+msgstr "モデムのファームウェア"
+
+msgid "No messages on the modem."
+msgstr "モデムに SMS はありません。"
+
+msgid "No service / very weak"
+msgstr "圏外 / 非常に弱い"
+
+msgid "Not registered"
+msgstr "未登録"
+
+msgid "Operator"
+msgstr "事業者"
+
+msgid "PCI / TAC / Cell ID"
+msgstr "PCI / TAC / セル ID"
+
+msgid "RSRP"
+msgstr "RSRP"
+
+msgid "RSRQ"
+msgstr "RSRQ"
+
+msgid "RSSI"
+msgstr "RSSI"
+
+msgid "Received"
+msgstr "受信日時"
+
+msgid "Registered (home)"
+msgstr "登録済み（ホーム）"
+
+msgid "Registered (roaming)"
+msgstr "登録済み（ローミング）"
+
+msgid "Registration"
+msgstr "ネットワーク登録"
+
+msgid "SIM message storage: %d of %d used."
+msgstr "SIM の SMS 保存領域: %d / %d 件使用中"
+
+msgid "SMS sent to %s."
+msgstr "%s に SMS を送信しました。"
+
+msgid "SMS"
+msgstr "SMS"
+
+msgid "Searching"
+msgstr "検索中"
+
+msgid "Send SMS"
+msgstr "SMS を送信"
+
+msgid "Send this SMS to %s? Sending an SMS may be charged by the carrier."
+msgstr "%s に SMS を送信しますか？ 送信には通信事業者の料金がかかる場合があります。"
+
+msgid "Send"
+msgstr "送信"
+
+msgid "Sending the SMS failed: %s"
+msgstr "SMS を送信できませんでした: %s"
+
+msgid "Signal level"
+msgstr "電波レベル"
+
+msgid "Signal"
+msgstr "電波の状態"
+
+msgid "The SIM message storage is (almost) full. New messages cannot be received until some are deleted."
+msgstr "SIM の SMS 保存領域が（ほぼ）いっぱいです。削除するまで新しい SMS を受信できません。"
+
+msgid "The message must be 1 to 70 characters."
+msgstr "本文は 1〜70 文字で入力してください。"
+
+msgid "Recipient"
+msgstr "宛先"
+
+msgid "Very weak"
+msgstr "非常に弱い"
+
+msgid "Weak"
+msgstr "弱い"

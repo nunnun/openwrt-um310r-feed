@@ -1,0 +1,95 @@
+#!/bin/sh
+# NEC uM310R front panel LEDs, reproducing the stock firmware behaviour.
+#  ANT: LTE signal level 0..5 from um310r-modem (stock adpmgr thresholds)
+#       solid green / flashing green / solid orange / flashing orange / solid red / flashing red
+#  COM: WWAN link: solid green = connected, flashing green = connecting, off = down
+#  ALM: OpenWrt status LED (green = running); turns red instead when a temperature
+#       sensor exceeds the T1/T2 threshold (stock default 85 C)
+# Flashing = 1 s on / 1 s off, like the stock kernel LED driver.
+# The LEDs are redrawn every second; the inputs are read less often (status and
+# link every 2 s, temperatures every 10 s) and LEDs are only written on change,
+# so the loop forks almost nothing.
+
+RUN=/var/run/um310r-leds
+IFACE="${1:-wwan}"
+mkdir -p $RUN
+
+led() { # led NAME VALUE (only on change)
+	local k="${1%%:*}_${1#*:}"
+	eval "[ \"\$cur_$k\" = \"$2\" ]" && return
+	eval "cur_$k=$2"
+	[ -d /sys/class/leds/$1 ] || return
+	echo none > /sys/class/leds/$1/trigger 2>/dev/null
+	echo $2 > /sys/class/leds/$1/brightness
+}
+
+temp_threshold() {
+	t=$(fw_printenv -n "$1" 2>/dev/null)
+	echo ${t:-85}
+}
+
+T1=$(temp_threshold boot_T1_threshold)
+T2=$(temp_threshold boot_T2_threshold)
+ST=/var/run/um310r-modem/status	# written by um310r-modem
+trap 'for l in green:ant red:ant green:com red:com red:alarm; do echo 0 > /sys/class/leds/$l/brightness; done; echo 1 > /sys/class/leds/green:status/brightness; exit 0' TERM INT
+
+# ANT level from the status file (shell builtins only); stale (> 60 s) = off
+read_ant() {
+	local k v t="" l="" now
+	if [ -r $ST ]; then
+		while IFS== read -r k v; do
+			case "$k" in time) t=$v ;; level) l=$v ;; esac
+		done < $ST
+	fi
+	ant=off
+	[ -n "$t" ] || return
+	now=$(date +%s)
+	[ $((now - t)) -lt 60 ] && ant=$l
+}
+
+read_com() {
+	case "$(ubus call network.interface.$IFACE status 2>/dev/null)" in
+		*'"up": true'*) com=up ;;
+		*'"pending": true'*) com=pending ;;
+		*) com=down ;;
+	esac
+}
+
+# ALM: temperature (sensors use 1/128 degC per LSB; the lm75 driver reports half of it)
+read_alarm() {
+	local h i=1 v th n
+	alarm=0
+	for h in /sys/class/hwmon/hwmon*; do
+		read -r n < $h/name 2>/dev/null; [ "$n" = lm75 ] || continue
+		read -r v < $h/temp1_input; v=$((v * 2 / 1000))
+		th=$T1; [ $i = 2 ] && th=$T2
+		[ $v -ge $th ] && alarm=1
+		i=$((i + 1))
+	done
+}
+
+tick=0; n=0
+while :; do
+	tick=$((1 - tick))
+	[ $((n % 2)) = 0 ] && { read_ant; read_com; }
+	[ $((n % 10)) = 0 ] && read_alarm
+	n=$((n + 1))
+	# ANT
+	case "$ant" in
+		5) g=1; r=0 ;;
+		4) g=$tick; r=0 ;;
+		3) g=1; r=1 ;;
+		2) g=$tick; r=$tick ;;
+		1) g=0; r=1 ;;
+		0) g=0; r=$tick ;;
+		*) g=0; r=0 ;;
+	esac
+	led green:ant $g; led red:ant $r
+	# COM
+	case "$com" in up) c=1 ;; pending) c=$tick ;; *) c=0 ;; esac
+	led green:com $c; led red:com 0
+	# ALM
+	led red:alarm $alarm
+	led green:status $((1 - alarm))
+	sleep 1
+done
