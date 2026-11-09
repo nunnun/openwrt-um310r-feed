@@ -9,7 +9,7 @@ PKG_NAME:=um310r-modem
 PKG_VERSION:=2026.11.08
 PKG_RELEASE:=3
 
-PKG_MAINTAINER:=Hirotaka Nakajima <hiro@skyblue.me.uk>
+PKG_MAINTAINER:=Hirotaka Nakajima <584070+nunnun@users.noreply.github.com>
 PKG_LICENSE:=GPL-2.0-only
 
 include $(INCLUDE_DIR)/package.mk

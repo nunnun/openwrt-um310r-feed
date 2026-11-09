@@ -9,7 +9,7 @@ LUCI_PKGARCH:=all
 
 PKG_VERSION:=2026.11.08
 PKG_RELEASE:=1
-PKG_MAINTAINER:=Hirotaka Nakajima <hiro@skyblue.me.uk>
+PKG_MAINTAINER:=Hirotaka Nakajima <584070+nunnun@users.noreply.github.com>
 PKG_LICENSE:=Apache-2.0
 
 include $(TOPDIR)/feeds/luci/luci.mk
