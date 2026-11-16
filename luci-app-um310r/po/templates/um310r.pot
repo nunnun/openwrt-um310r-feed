@@ -49,6 +49,12 @@ msgstr ""
 msgid "Message"
 msgstr ""
 
+msgid "LTE attach APN"
+msgstr ""
+
+msgid "(set with the APN of the WWAN interface)"
+msgstr ""
+
 msgid "Modem firmware"
 msgstr ""
 

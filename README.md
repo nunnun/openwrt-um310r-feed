@@ -21,6 +21,10 @@ Helper next to **ModemManager**, which owns the data connection (MBIM, netifd
   - LTE details for LuCI and the ANT LED: band, EARFCN, PCI, TAC/cell, RSRP/RSRQ
   - the card's IMEI (the MBIM device id reports a wrong check digit)
   - SIM SMS storage usage (a full SIM rejects new messages)
+  - the LTE attach APN: the card's PDP context 1 follows the APN settings of
+    `network.wwan` (APN, IP type, auth, username, password; LuCI: Network →
+    Interfaces → WWAN). ModemManager cannot set it on this card, and some
+    networks (e.g. docomo MVNO SIMs) refuse an empty attach APN.
   - recovery: wwan left down by netifd → `ifup`; ModemManager without the modem
     or stuck on a closed MBIM channel → reset ModemManager (with a clean MBIM
     open/close); card not answering → power cycle (needs `um310r-lte-power`
@@ -35,7 +39,8 @@ Helper next to **ModemManager**, which owns the data connection (MBIM, netifd
 
 ### luci-app-um310r
 
-LuCI page *Network → LTE*: signal details, SMS list / delete / send. Uses only
+LuCI page *Network → LTE*: signal details, the attach APN, SMS list / delete /
+send. Uses only
 the `um310r` ubus object. Japanese translation included
 (`luci-i18n-um310r-ja`).
 
@@ -70,6 +75,7 @@ for the translation). The network interface is set up by the image
   - LuCI と ANT LED 用の LTE 情報：バンド、EARFCN、PCI、TAC / セル、RSRP / RSRQ
   - カードの IMEI（MBIM が返す値はチェックディジットが誤っているため）
   - SIM の SMS 保存領域の使用量（いっぱいになると新しい SMS を受け取れません）
+  - LTE のアタッチ用 APN：カードの PDP コンテキスト 1 を `network.wwan` の APN 設定（APN、IP タイプ、認証方式、ユーザー名、パスワード。LuCI では「ネットワーク → インターフェース → WWAN」）に合わせて書き換えます。このカードでは ModemManager から設定できず、docomo 系 MVNO の SIM など、アタッチ用 APN が空だとネットワークに登録できない回線があるためです。
   - 復旧：netifd が wwan を落としたままなら `ifup`、ModemManager がモデムを見失ったり MBIM が閉じたまま固まったりしたら ModemManager を再起動（MBIM をきれいに開け閉めしてから）、カードが応答しなければ電源を入れ直す（イメージ側の `um310r-lte-power` が必要）
 - `20-amm570` hotplug：純正ファームウェアは起動のたびにカードを ACM モードにします。ACM モード（USB 1ecb:0202）で見つかったら、ttyACM0（通常の cdc_acm）から一度だけ MBIM モード（1ecb:0209）に切り替えます。
 - 前面 LED（ANT / COM / ALM）を純正ファームウェアと同じように点灯
@@ -78,7 +84,7 @@ for the translation). The network interface is set up by the image
 
 ### luci-app-um310r
 
-LuCI の「ネットワーク → LTE」ページです。電波の詳しい状態と、SMS の一覧・削除・送信ができます。使うのは ubus の `um310r` オブジェクトだけです。日本語訳（`luci-i18n-um310r-ja`）付き。
+LuCI の「ネットワーク → LTE」ページです。電波の詳しい状態とアタッチ用 APN の表示、SMS の一覧・削除・送信ができます。使うのは ubus の `um310r` オブジェクトだけです。日本語訳（`luci-i18n-um310r-ja`）付き。
 
 ### 使い方
 

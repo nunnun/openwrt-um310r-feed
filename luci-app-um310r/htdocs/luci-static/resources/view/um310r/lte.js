@@ -67,7 +67,9 @@ return view.extend({
 			[ _('Band'), st.band ? 'B' + st.band + ' (EARFCN ' + v('earfcn') + ')' : v('earfcn') ],
 			[ _('PCI / TAC / Cell ID'), '%s / %s / %s'.format(v('pci'), v('tac'), v('cell')) ],
 			[ _('IMEI'), v('imei') ],
-			[ _('Modem firmware'), v('revision') ]
+			[ _('Modem firmware'), v('revision') ],
+			[ _('LTE attach APN'), E([], [ v('attach_apn'), ' ',
+				E('a', { 'href': L.url('admin/network/network') }, _('(set with the APN of the WWAN interface)')) ]) ]
 		];
 		return E('table', { 'class': 'table' }, rows.map(function(r) {
 			return E('tr', { 'class': 'tr' }, [

@@ -7,7 +7,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=um310r-modem
 PKG_VERSION:=2026.11.08
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 
 PKG_MAINTAINER:=Hirotaka Nakajima <584070+nunnun@users.noreply.github.com>
 PKG_LICENSE:=GPL-2.0-only
@@ -27,7 +27,8 @@ define Package/um310r-modem/description
   Helper for the AM Telecom AMM570 on the NEC uM310R, next to ModemManager
   (which owns the MBIM data connection and SMS). It owns the card's AT port
   (ModemManager is told to ignore the serial ports): LTE details (band,
-  EARFCN, PCI, cell), the correct IMEI, SIM SMS usage, the ANT/COM/ALM LEDs
+  EARFCN, PCI, cell), the correct IMEI, SIM SMS usage, the LTE attach APN
+  (card PDP context 1, from network.wwan's APN settings), the ANT/COM/ALM LEDs
   like the stock firmware, switching a card in ACM mode to MBIM mode, and
   recovery (wwan left down, ModemManager stuck on a closed MBIM channel,
   card not answering -> power cycle). Provides the ubus object "um310r"

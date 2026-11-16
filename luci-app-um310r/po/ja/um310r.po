@@ -51,6 +51,12 @@ msgstr "LTE"
 msgid "Message"
 msgstr "本文"
 
+msgid "LTE attach APN"
+msgstr "アタッチ用APN"
+
+msgid "(set with the APN of the WWAN interface)"
+msgstr "（WWANインターフェースのAPNで設定）"
+
 msgid "Modem firmware"
 msgstr "モデムのファームウェア"
 

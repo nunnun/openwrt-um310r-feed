@@ -7,6 +7,7 @@
 #  - LTE details for LuCI and the ANT LED (band, EARFCN, PCI, TAC/cell, level)
 #  - the correct IMEI (the card's MBIM device id has a wrong check digit)
 #  - SIM SMS storage usage (a full SIM rejects new messages)
+#  - the LTE attach APN (card PDP context 1) from network.wwan's APN settings
 #  - recovery: wwan left down by netifd -> ifup; ModemManager without the modem
 #    or stuck on a dead MBIM channel -> reset it; card not answering at all ->
 #    power-cycle it
@@ -156,6 +157,7 @@ imei=$IMEI
 revision=$REVISION
 sms_used=$SMS_USED
 sms_total=$SMS_TOTAL
+attach_apn=$ATTACH_APN
 EOF
 	mv $RUN/status.new $RUN/status
 }
@@ -172,6 +174,71 @@ poll_sms_usage() {
 read_ident() {
 	IMEI=$(AT 'AT+CGSN' | grep -m1 -E '^[0-9]{14,16}$')
 	REVISION=$(AT 'AT+CGMR' | grep -v -E '^(OK|AT.*|)$' | head -1 | tr -d '"')
+}
+
+# --- LTE attach APN -------------------------------------------------------------
+# The network uses the card's PDP context 1 for the LTE attach. ModemManager
+# cannot set it on this card (MBIM: "LTE attach configuration is unsupported"),
+# and some networks reject an empty attach APN (docomo MVNO SIMs: registration
+# stays "searching", +CEER "Insufficient Resources"). So context 1 follows the
+# connection settings of network.wwan (apn, iptype, allowedauth, username,
+# password), which LuCI edits under Network > Interfaces > WWAN. Empty apn =
+# leave the card alone. The card keeps context 1 across power cycles;
+# ATTACH_DONE remembers what was applied (the password cannot be read back).
+ATTACH_DONE=/etc/um310r-modem.attach
+ATTACH_APN=""
+ATTACH_FAILED=""	# settings that failed to apply: not retried until they change
+
+attach_wanted() { # sets W_PDP W_AUTH W_APN W_USER W_PASS; 1 = nothing to set
+	local auths cr=$(printf '\r') nl="
+"
+	W_APN=$(uci -q get network.$IFACE.apn)
+	[ -n "$W_APN" ] || return 1
+	case "$W_APN" in *[!A-Za-z0-9.-]*) log "attach APN: ignoring invalid apn '$W_APN'"; return 1 ;; esac
+	W_USER=$(uci -q get network.$IFACE.username); W_PASS=$(uci -q get network.$IFACE.password)
+	case "$W_USER$W_PASS" in *'"'*|*"$cr"*|*"$nl"*)
+		log "attach APN: ignoring a username/password with quotes or line breaks"; return 1 ;;
+	esac
+	case "$(uci -q get network.$IFACE.iptype)" in
+		ipv4) W_PDP=IP ;; ipv6) W_PDP=IPV6 ;; *) W_PDP=IPV4V6 ;;
+	esac
+	# $QCPDPP auth: 0 none, 1 PAP, 2 CHAP (allowedauth unset = CHAP, as for "pap chap")
+	auths=" $(uci -q get network.$IFACE.allowedauth) "
+	if [ -z "$W_USER" ]; then W_AUTH=0
+	elif [ "$auths" = "  " ] || [ -z "${auths##* chap *}" ]; then W_AUTH=2
+	elif [ -z "${auths##* pap *}" ]; then W_AUTH=1
+	else W_AUTH=0; fi
+	return 0
+}
+
+sync_attach() { # caller holds the AT lock, IMEI known; 0 = context 1 was changed
+	local cur fp
+	ATTACH_APN=$(AT 'AT+CGDCONT?' | sed -n 's/^+CGDCONT: *1,"\([^"]*\)","\([^"]*\)".*/\2 (\1)/p')
+	attach_wanted || return 1
+	fp=$(printf '%s\n' "$IMEI" "$W_PDP" "$W_AUTH" "$W_APN" "$W_USER" "$W_PASS" | md5sum | cut -d' ' -f1)
+	# $QCPDPP: 1,<auth>[,"<user>"]
+	cur=$(AT 'AT$QCPDPP?' | sed -n 's/^\$QCPDPP: *1,\([0-9]*\)\(,"\([^"]*\)"\)\{0,1\}.*/\1 \3/p')
+	if [ "$ATTACH_APN" = "$W_APN ($W_PDP)" ] && [ "${cur%% *}" = "$W_AUTH" ] &&
+	   { [ "$W_AUTH" = 0 ] || [ "${cur#* }" = "$W_USER" ]; } &&
+	   [ "$(cat $ATTACH_DONE 2>/dev/null)" = "$fp" ]; then
+		return 1
+	fi
+	[ "$ATTACH_FAILED" = "$fp" ] && return 1
+	ATTACH_FAILED=$fp
+	log "setting the LTE attach APN (PDP context 1) to '$W_APN' ($W_PDP, auth $W_AUTH) and re-attaching"
+	AT "AT+CGDCONT=1,\"$W_PDP\",\"$W_APN\"" 5 | grep -q '^OK$' || { log "attach APN: AT+CGDCONT failed"; return 1; }
+	if [ "$W_AUTH" = 0 ]; then
+		AT 'AT$QCPDPP=1,0' 5 | grep -q '^OK$'
+	else
+		AT "AT\$QCPDPP=1,$W_AUTH,\"$W_PASS\",\"$W_USER\"" 5 | grep -q '^OK$'
+	fi || { log "attach APN: AT\$QCPDPP failed"; return 1; }
+	echo "$fp" > $ATTACH_DONE
+	ATTACH_FAILED=""
+	ATTACH_APN="$W_APN ($W_PDP)"
+	AT 'AT+CFUN=4' 10 >/dev/null	# re-attach with the new context 1
+	sleep 2
+	AT 'AT+CFUN=1' 10 >/dev/null
+	return 0
 }
 
 # --- connection recovery ------------------------------------------------------
@@ -288,9 +355,13 @@ daemon() {
 		if at_open; then
 			[ -n "$IMEI" ] || read_ident
 			[ $((n % 6)) = 0 ] && poll_sms_usage
+			REATTACH=0
+			[ -n "$IMEI" ] && [ $((n % 3)) = 0 ] && sync_attach && REATTACH=1
 			poll_signal
-			[ $POLL_OK = 1 ] && check_session
+			[ $POLL_OK = 1 ] && [ $REATTACH = 0 ] && check_session
 			at_close
+			# the session is gone after a re-attach; let netifd connect again
+			[ $REATTACH = 1 ] && [ "$(uci -q get network.$IFACE.disabled)" != 1 ] && ifup $IFACE
 		else
 			echo "registered=" > $RUN/status
 			IMEI=""
@@ -354,5 +425,5 @@ case "$1" in
 	sms-send)
 		[ -n "$2" ] && [ -n "$3" ] || { echo "sms-send <number> <text>"; exit 1; }
 		sms_send "$2" "$3" ;;
-	*) sed -n '2,19s/^# \{0,1\}//p' "$0"; exit 1 ;;
+	*) sed -n '2,20s/^# \{0,1\}//p' "$0"; exit 1 ;;
 esac

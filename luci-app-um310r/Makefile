@@ -8,7 +8,7 @@ LUCI_DEPENDS:=+luci-base +um310r-modem
 LUCI_PKGARCH:=all
 
 PKG_VERSION:=2026.11.08
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 PKG_MAINTAINER:=Hirotaka Nakajima <584070+nunnun@users.noreply.github.com>
 PKG_LICENSE:=Apache-2.0
 
