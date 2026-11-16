@@ -167,7 +167,8 @@ poll_sms_usage() {
 	SMS_USED=$1; SMS_TOTAL=$2
 }
 
-# IMEI and firmware revision, read once per card start
+# IMEI and firmware revision, read once per card start (retried on the next
+# poll while the card does not answer AT+CGSN yet)
 read_ident() {
 	IMEI=$(AT 'AT+CGSN' | grep -m1 -E '^[0-9]{14,16}$')
 	REVISION=$(AT 'AT+CGMR' | grep -v -E '^(OK|AT.*|)$' | head -1 | tr -d '"')
@@ -280,26 +281,26 @@ recover_card() {
 }
 
 daemon() {
-	local n=0 ident=""
+	local n=0
 	rm -f $RUN/status
 	while :; do
 		POLL_OK=0
 		if at_open; then
-			[ -n "$ident" ] || { read_ident; ident=1; }
+			[ -n "$IMEI" ] || read_ident
 			[ $((n % 6)) = 0 ] && poll_sms_usage
 			poll_signal
 			[ $POLL_OK = 1 ] && check_session
 			at_close
 		else
 			echo "registered=" > $RUN/status
-			ident=""
+			IMEI=""
 		fi
 		if [ $POLL_OK = 1 ]; then
 			FAILS=0
 			[ $(( $(date +%s) - LAST_RECOVER )) -lt 1800 ] || RECOVER_WAIT=600
 		else
 			FAILS=$((FAILS + 1))
-			[ $FAILS -lt $RECOVER_AFTER ] || { recover_card; ident=""; }
+			[ $FAILS -lt $RECOVER_AFTER ] || { recover_card; IMEI=""; }
 		fi
 		n=$((n + 1))
 		sleep 10
