@@ -44,22 +44,36 @@ send. Uses only
 the `um310r` ubus object. Japanese translation included
 (`luci-i18n-um310r-ja`).
 
+### tailscale-tiny
+
+Tailscale with a reduced feature set, for routers with little flash. Same
+source, Go toolchain, init script and `/etc/config/tailscale` as the
+`tailscale` package in the packages feed; only the Tailscale feature tags
+differ. Kept: kernel TUN routing (nftables), NAT traversal, subnet routes and
+exit nodes (use and advertise), MagicDNS, UPnP/NAT-PMP port mapping. Left out
+among others: Tailscale SSH, Serve/Funnel, Taildrop, netstack (userspace
+networking), Tailnet Lock, the web client and log upload. Built into the
+squashfs image it takes about 4.3 MB (the full package is about 30 MB).
+It has its own package name, so `apk upgrade` does not replace it with the
+full package. Needs the packages feed (golang).
+
 ## Use
 
 In an OpenWrt tree:
 
     echo "src-git um310r https://github.com/nunnun/openwrt-um310r-feed.git" >> feeds.conf
     ./scripts/feeds update um310r
-    ./scripts/feeds install -p um310r um310r-modem luci-app-um310r
+    ./scripts/feeds install -p um310r um310r-modem luci-app-um310r tailscale-tiny
 
 then select `um310r-modem` and `luci-app-um310r` (and `CONFIG_LUCI_LANG_ja=y`
-for the translation). The network interface is set up by the image
+for the translation, and `tailscale-tiny` if wanted). The network interface is set up by the image
 (`network.wwan`, `proto modemmanager`).
 
 ## License
 
 - um310r-modem: GPL-2.0-only (`LICENSE.GPL-2.0`)
 - luci-app-um310r: Apache-2.0 (`LICENSE.Apache-2.0`)
+- tailscale-tiny: BSD-3-Clause (Tailscale), packaging as in the packages feed
 
 ## 日本語
 
@@ -86,17 +100,22 @@ for the translation). The network interface is set up by the image
 
 LuCI の「ネットワーク → LTE」ページです。電波の詳しい状態とアタッチ用 APN の表示、SMS の一覧・削除・送信ができます。使うのは ubus の `um310r` オブジェクトだけです。日本語訳（`luci-i18n-um310r-ja`）付き。
 
+### tailscale-tiny
+
+flash の少ないルーター向けに機能を絞った Tailscale です。ソース、Go ツールチェーン、init スクリプト、`/etc/config/tailscale` は packages フィードの `tailscale` パッケージと同じで、Tailscale のビルドタグ（feature tags）だけが違います。残している機能：カーネル TUN でのルーティング（nftables）、NAT 越え、サブネットルートと exit node（利用・提供）、MagicDNS、UPnP/NAT-PMP。外した主な機能：Tailscale SSH、Serve/Funnel、Taildrop、netstack（userspace networking）、Tailnet Lock、Web クライアント、ログ送信。squashfs イメージに入れると約 4.3 MB です（通常のパッケージは約 30 MB）。パッケージ名が別なので、`apk upgrade` で通常版に置き換わることはありません。packages フィード（golang）が必要です。
+
 ### 使い方
 
 OpenWrt のソースツリーで：
 
     echo "src-git um310r https://github.com/nunnun/openwrt-um310r-feed.git" >> feeds.conf
     ./scripts/feeds update um310r
-    ./scripts/feeds install -p um310r um310r-modem luci-app-um310r
+    ./scripts/feeds install -p um310r um310r-modem luci-app-um310r tailscale-tiny
 
-`um310r-modem` と `luci-app-um310r` を選び、日本語訳が要るなら `CONFIG_LUCI_LANG_ja=y` も設定します。ネットワークインターフェース（`network.wwan`、`proto modemmanager`）はイメージ側で設定します。
+`um310r-modem` と `luci-app-um310r` を選び、日本語訳が要るなら `CONFIG_LUCI_LANG_ja=y` も設定します。Tailscale を使うなら `tailscale-tiny` も選びます。ネットワークインターフェース（`network.wwan`、`proto modemmanager`）はイメージ側で設定します。
 
 ### ライセンス
 
 - um310r-modem：GPL-2.0-only（`LICENSE.GPL-2.0`）
 - luci-app-um310r：Apache-2.0（`LICENSE.Apache-2.0`）
+- tailscale-tiny：BSD-3-Clause（Tailscale）。パッケージングは packages フィードのものと同じ
